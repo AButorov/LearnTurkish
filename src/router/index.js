@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHashHistory } from 'vue-router'; // Используем createWebHashHistory
 import Home from '@/views/Home.vue';
 import Dictionary from '@/components/Dictionary.vue';
 import Numbers from '@/components/Numbers.vue';
@@ -14,7 +14,7 @@ const routes = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(), // Переключили на hash mode
   routes,
 });
 
