@@ -7,18 +7,43 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependencies
+node_modules/
+dist-ssr/
 *.local
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# System files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.directory
+
+# Test and debug files
+coverage/
+*.test.js
+*.spec.js
+
+# PWA files
+sw.js
+workbox-*
+
+# Tauri files
+src-tauri/target/
+src-tauri/.idea/
