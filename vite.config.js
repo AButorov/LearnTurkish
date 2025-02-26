@@ -19,4 +19,5 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 1000, // Лимит в килобайтах (по умолчанию 500)
   },
+  base: '/LearnTurkish/',
 });
