@@ -101,7 +101,7 @@
 
 Если у вас есть вопросы или предложения, свяжитесь со мной:
 - **Email**: work.bap@icloud.com
-- **GitHub**: [ваш-username](https://github.com/AButorov)
+- **GitHub**: [AButorov](https://github.com/AButorov)
 
 ---
 
