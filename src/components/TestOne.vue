@@ -100,7 +100,6 @@ import { useDictionaryStore } from '@/stores/dictionary';
 const dictionaryStore = useDictionaryStore();
 const currentWord = ref(null);
 const showTranslation = ref(false);
-const shownWords = ref(new Set()); // Множество для хранения показанных слов
 const learnedWordsCount = ref(0); // Количество выученных слов
 const wordsToRepeat = ref([]); // Слова для повторения
 const showRepeatList = ref(false); // Показывать ли список слов для повторения
@@ -114,7 +113,7 @@ const progress = computed(() => {
 
 // Функция для выбора случайного слова
 const getRandomWord = () => {
-  let availableWords = dictionaryStore.words.filter(word => !shownWords.value.has(word.turkish));
+  let availableWords = dictionaryStore.words.filter(word => !word.learned);
 
   // Если есть слова для повторения, добавляем их в доступные слова
   if (wordsToRepeat.value.length > 0) {
@@ -140,19 +139,20 @@ const showWordTranslation = () => {
 // Обработка нажатия кнопки "Знаю"
 const handleKnow = () => {
   const word = currentWord.value;
-  shownWords.value.add(word.turkish);
 
-  // Если слово находится в списке для повторения, увеличиваем счетчик правильных ответов
-  const repeatWord = wordsToRepeat.value.find(w => w.turkish === word.turkish);
-  if (repeatWord) {
-    repeatWord.correctCount += 1;
+  if (wordsToRepeat.value.includes(word)) {
+    // Если слово из списка повторения
+    word.correctCount = (word.correctCount || 0) + 1;
+
     // Если слово было правильно ответено дважды подряд, удаляем его из списка повторения
-    if (repeatWord.correctCount >= 2) {
-      wordsToRepeat.value = wordsToRepeat.value.filter(w => w.turkish !== word.turkish);
-      learnedWordsCount.value += 1; // Увеличиваем счетчик выученных слов
+    if (word.correctCount >= 2) {
+      wordsToRepeat.value = wordsToRepeat.value.filter(w => w !== word);
+      word.learned = true; // Помечаем слово как выученное
+      learnedWordsCount.value += 1;
     }
   } else {
-    // Если слово не в списке повторения, увеличиваем счетчик выученных слов
+    // Если слово из основного словаря
+    word.learned = true; // Помечаем слово как выученное
     learnedWordsCount.value += 1;
   }
 
@@ -162,14 +162,14 @@ const handleKnow = () => {
 // Обработка нажатия кнопки "Повторить"
 const handleRepeat = () => {
   const word = currentWord.value;
-  const repeatWord = wordsToRepeat.value.find(w => w.turkish === word.turkish);
 
-  if (!repeatWord) {
-    // Добавляем слово в список для повторения с начальным счетчиком правильных ответов
-    wordsToRepeat.value.push({ ...word, correctCount: 0 });
+  if (!wordsToRepeat.value.includes(word)) {
+    // Добавляем слово в список для повторения
+    wordsToRepeat.value.push(word);
+    word.correctCount = 0; // Обнуляем счетчик правильных ответов
   } else {
-    // Если пользователь ошибся, обнуляем счетчик правильных ответов
-    repeatWord.correctCount = 0;
+    // Если слово уже в списке повторения, обнуляем счетчик правильных ответов
+    word.correctCount = 0;
   }
 
   getRandomWord();
@@ -177,7 +177,10 @@ const handleRepeat = () => {
 
 // Функция для сброса статистики и начала теста заново
 const startTest = () => {
-  shownWords.value.clear();
+  dictionaryStore.words.forEach(word => {
+    word.learned = false; // Сбрасываем статус выученности
+    word.correctCount = 0; // Обнуляем счетчики правильных ответов
+  });
   learnedWordsCount.value = 0;
   wordsToRepeat.value = [];
   currentWord.value = null;
