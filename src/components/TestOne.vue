@@ -17,6 +17,7 @@
         </p>
       </div>
       <p v-else-if="dictionaryStore.words.length === 0" class="text-h6">Словарь пуст. Загрузите словарь для тестирования.</p>
+      <p v-else-if="isTestFinished" class="text-h6">Тестирование завершено!</p>
       <p v-else class="text-h6">Нажмите "Старт", чтобы начать тестирование.</p>
 
       <!-- Кнопка "Показать перевод" или кнопки "Знаю" и "Повторить" -->
@@ -90,6 +91,23 @@
       </v-list>
       <p v-else-if="showRepeatList && wordsToRepeat.length === 0" class="text-h6">Нет слов для повторения.</p>
     </v-card>
+
+    <!-- Блок для финального списка повторений -->
+    <v-card v-if="isTestFinished" class="mt-4 pa-4" width="600">
+      <h3 class="text-h5 font-weight-bold mb-4">Слова, требующие внимания:</h3>
+      <v-list>
+        <v-list-item v-for="(word, index) in sortedRepeatWords" :key="index">
+          <v-list-item-content>
+            <v-list-item-title class="text-h6">
+              <span :style="{ color: '#1976D2' }">{{ word.turkish }}</span> - 
+              <span :style="{ color: '#4CAF50' }">{{ word.russian }}</span>
+            </v-list-item-title>
+            <v-list-item-subtitle>Количество повторов: {{ word.repeatCount }}</v-list-item-subtitle>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+      <p v-if="sortedRepeatWords.length === 0" class="text-h6">Все слова выучены!</p>
+    </v-card>
   </v-container>
 </template>
 
@@ -103,6 +121,7 @@ const showTranslation = ref(false);
 const learnedWordsCount = ref(0); // Количество выученных слов
 const wordsToRepeat = ref([]); // Слова для повторения
 const showRepeatList = ref(false); // Показывать ли список слов для повторения
+const isTestFinished = ref(false); // Завершено ли тестирование
 
 // Прогресс в процентах
 const progress = computed(() => {
@@ -128,6 +147,7 @@ const getRandomWord = () => {
     showTranslation.value = false;
   } else {
     currentWord.value = null;
+    isTestFinished.value = true; // Тестирование завершено
   }
 };
 
@@ -167,9 +187,11 @@ const handleRepeat = () => {
     // Добавляем слово в список для повторения
     wordsToRepeat.value.push(word);
     word.correctCount = 0; // Обнуляем счетчик правильных ответов
+    word.repeatCount = (word.repeatCount || 0) + 1; // Увеличиваем счетчик повторов
   } else {
     // Если слово уже в списке повторения, обнуляем счетчик правильных ответов
     word.correctCount = 0;
+    word.repeatCount = (word.repeatCount || 0) + 1; // Увеличиваем счетчик повторов
   }
 
   getRandomWord();
@@ -180,11 +202,13 @@ const startTest = () => {
   dictionaryStore.words.forEach(word => {
     word.learned = false; // Сбрасываем статус выученности
     word.correctCount = 0; // Обнуляем счетчики правильных ответов
+    word.repeatCount = 0; // Обнуляем счетчики повторов
   });
   learnedWordsCount.value = 0;
   wordsToRepeat.value = [];
   currentWord.value = null;
   showTranslation.value = false;
+  isTestFinished.value = false;
   getRandomWord();
 };
 
@@ -192,4 +216,11 @@ const startTest = () => {
 const toggleRepeatList = () => {
   showRepeatList.value = !showRepeatList.value;
 };
+
+// Список слов для повторения, отсортированный по количеству повторов
+const sortedRepeatWords = computed(() => {
+  return dictionaryStore.words
+    .filter(word => word.repeatCount > 0) // Отбираем слова с хотя бы одним повтором
+    .sort((a, b) => b.repeatCount - a.repeatCount); // Сортируем по убыванию количества повторов
+});
 </script>
