@@ -7,11 +7,6 @@
         Старт
       </v-btn>
 
-      <!-- Кнопка для генерации слова или показа перевода -->
-      <v-btn @click="handleButtonClick" :color="buttonColor" block class="mb-4">
-        {{ buttonText }}
-      </v-btn>
-
       <!-- Слово и перевод по центру -->
       <div v-if="currentWord" class="d-flex flex-column align-center">
         <!-- Увеличиваем шрифт русского слова и добавляем цвет -->
@@ -21,14 +16,68 @@
           {{ showTranslation ? currentWord.turkish : '&nbsp;' }}
         </p>
       </div>
-      <p v-else class="text-h6">Словарь пуст. Загрузите словарь для тестирования.</p>
+      <p v-else-if="dictionaryStore.words.length === 0" class="text-h6">Словарь пуст. Загрузите словарь для тестирования.</p>
+      <p v-else class="text-h6">Нажмите "Старт", чтобы начать тестирование.</p>
 
-      <!-- Блок статистики -->
-      <v-card class="mt-4 pa-4">
-        <p class="text-h6">Статистика:</p>
-        <p>Показано слов: {{ shownWordsCount }}</p>
-        <p>Повторов: {{ repeatedWordsCount }}</p>
-      </v-card>
+      <!-- Кнопка "Показать перевод" -->
+      <v-btn v-if="currentWord && !showTranslation" @click="showWordTranslation" color="info" block class="mb-4">
+        Показать перевод
+      </v-btn>
+
+      <!-- Кнопки "Знаю" и "Повторить" -->
+      <v-row v-if="currentWord" class="mt-4">
+        <v-col cols="6">
+          <v-btn @click="handleKnow" color="success" block :disabled="!showTranslation">Знаю</v-btn>
+        </v-col>
+        <v-col cols="6">
+          <v-btn @click="handleRepeat" color="warning" block :disabled="!showTranslation">Повторить</v-btn>
+        </v-col>
+      </v-row>
+    </v-card>
+
+    <!-- Блок статистики и прогресса -->
+    <v-card class="mt-4 pa-4" width="600">
+      <v-list>
+        <v-list-item>
+          <v-list-item-content>
+            <v-list-item-title>Общее количество слов: {{ dictionaryStore.words.length }}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item>
+          <v-list-item-content>
+            <v-list-item-title>Выучено слов: {{ learnedWordsCount }}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item>
+          <v-list-item-content>
+            <v-list-item-title>Повторов: {{ repeatedWordsCount }}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+      <v-progress-linear
+        v-model="progress"
+        color="primary"
+        height="20"
+        class="mt-2"
+      >
+        <strong>{{ progress }}%</strong>
+      </v-progress-linear>
+    </v-card>
+
+    <!-- Блок для слов, которые нужно повторить -->
+    <v-card v-if="wordsToRepeat.length > 0" class="mt-4 pa-4" width="600">
+      <v-list>
+        <v-list-item>
+          <v-list-item-content>
+            <v-list-item-title class="text-h6">Слова для повторения:</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item v-for="(word, index) in wordsToRepeat" :key="index">
+          <v-list-item-content>
+            <v-list-item-title>{{ word.russian }} - {{ word.turkish }}</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
     </v-card>
   </v-container>
 </template>
@@ -41,39 +90,35 @@ const dictionaryStore = useDictionaryStore();
 const currentWord = ref(null);
 const showTranslation = ref(false);
 const shownWords = ref(new Set()); // Множество для хранения показанных слов
-const shownWordsCount = ref(0); // Количество показанных слов
+const learnedWordsCount = ref(0); // Количество выученных слов
 const repeatedWordsCount = ref(0); // Количество повторов
+const wordsToRepeat = ref([]); // Слова для повторения
 
-// Состояние кнопки
-const isGenerated = ref(false);
-
-// Текст кнопки
-const buttonText = computed(() => {
-  return isGenerated.value ? 'Показать перевод' : 'Следующее слово';
-});
-
-// Цвет кнопки
-const buttonColor = computed(() => {
-  return isGenerated.value ? 'success' : 'primary';
+// Прогресс в процентах
+const progress = computed(() => {
+  return Math.round((learnedWordsCount.value / dictionaryStore.words.length) * 100);
 });
 
 // Функция для выбора случайного слова
 const getRandomWord = () => {
-  if (dictionaryStore.words.length > 0) {
-    const randomIndex = Math.floor(Math.random() * dictionaryStore.words.length);
-    const word = dictionaryStore.words[randomIndex];
+  let availableWords = dictionaryStore.words.filter(word => !shownWords.value.has(word.russian));
 
-    // Проверяем, было ли слово показано ранее
-    if (shownWords.value.has(word.russian)) {
-      repeatedWordsCount.value += 1;
-    } else {
-      shownWords.value.add(word.russian);
-      shownWordsCount.value += 1;
+  // Если есть слова для повторения, добавляем их в доступные слова
+  if (wordsToRepeat.value.length > 0) {
+    availableWords = [...availableWords, ...wordsToRepeat.value];
+  }
+
+  if (availableWords.length > 0) {
+    const randomIndex = Math.floor(Math.random() * availableWords.length);
+    const word = availableWords[randomIndex];
+
+    // Если слово было взято из списка для повторения, удаляем его оттуда
+    if (wordsToRepeat.value.includes(word)) {
+      wordsToRepeat.value = wordsToRepeat.value.filter(w => w !== word);
     }
 
     currentWord.value = word;
     showTranslation.value = false;
-    isGenerated.value = true; // Переключаем состояние кнопки
   } else {
     currentWord.value = null;
   }
@@ -82,25 +127,30 @@ const getRandomWord = () => {
 // Показать перевод
 const showWordTranslation = () => {
   showTranslation.value = true;
-  isGenerated.value = false; // Переключаем состояние кнопки
 };
 
-// Обработка нажатия кнопки
-const handleButtonClick = () => {
-  if (isGenerated.value) {
-    showWordTranslation(); // Показываем перевод
-  } else {
-    getRandomWord(); // Генерируем новое слово
-  }
+// Обработка нажатия кнопки "Знаю"
+const handleKnow = () => {
+  shownWords.value.add(currentWord.value.russian);
+  learnedWordsCount.value += 1;
+  getRandomWord();
+};
+
+// Обработка нажатия кнопки "Повторить"
+const handleRepeat = () => {
+  wordsToRepeat.value.push(currentWord.value);
+  repeatedWordsCount.value += 1;
+  getRandomWord();
 };
 
 // Функция для сброса статистики и начала теста заново
 const startTest = () => {
   shownWords.value.clear();
-  shownWordsCount.value = 0;
+  learnedWordsCount.value = 0;
   repeatedWordsCount.value = 0;
+  wordsToRepeat.value = [];
   currentWord.value = null;
   showTranslation.value = false;
-  isGenerated.value = false;
+  getRandomWord();
 };
 </script>
