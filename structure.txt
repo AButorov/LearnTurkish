@@ -1,0 +1,54 @@
+.
+├── README.md
+├── dist
+│   ├── assets
+│   │   ├── index-C-sdgQmM.js
+│   │   ├── index-DGBrvTzb.css
+│   │   ├── materialdesignicons-webfont-B7mPwVP_.ttf
+│   │   ├── materialdesignicons-webfont-CSr8KVlo.eot
+│   │   ├── materialdesignicons-webfont-Dp5v-WZN.woff2
+│   │   └── materialdesignicons-webfont-PXm3-2wK.woff
+│   ├── favicon.ico
+│   ├── favicon.png
+│   ├── favicon_transparent.png
+│   ├── index.html
+│   └── vite.svg
+├── index.html
+├── package-lock.json
+├── package.json
+├── public
+│   ├── dictionaries
+│   │   ├── basic-words.json
+│   │   ├── calendar-time-phrases.json
+│   │   ├── food.json
+│   │   └── travel-phrases.json
+│   ├── favicon.ico
+│   ├── favicon.png
+│   ├── favicon_transparent.png
+│   └── vite.svg
+├── src
+│   ├── App.vue
+│   ├── assets
+│   │   └── vue.svg
+│   ├── components
+│   │   ├── Dictionary.vue
+│   │   ├── Numbers.vue
+│   │   ├── TestOne.vue
+│   │   └── TestTwo.vue
+│   ├── main.js
+│   ├── plugins
+│   │   └── vuetify.js
+│   ├── router
+│   │   └── index.js
+│   ├── stores
+│   │   └── dictionary.js
+│   ├── style.css
+│   ├── utils
+│   │   └── numberConverter.js
+│   └── views
+│       └── Home.vue
+├── stack.md
+├── structure.txt
+└── vite.config.js
+
+13 directories, 39 files
