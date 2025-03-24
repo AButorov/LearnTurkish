@@ -123,6 +123,11 @@ const predefinedDictionaries = ref([
     name: 'calendar-time-phrases',
     title: 'Календарь и время',
     description: 'Названия времен года, месяцев, дней недели, времени'
+  },
+  {
+    name: 'most_common_verbs_50',
+    title: '50 глаголов',
+    description: '50 основных глаголов'
   }
 ]);
 
